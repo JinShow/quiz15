@@ -34,7 +34,7 @@ public class QuizServiceController {
 	public BasicRes update(@Valid @RequestBody QuizUpdateReq req) throws Exception {
 		return quizService.update(req);
 	}
-	
+
 	@GetMapping("quiz/getAll")
 	public SearchRes getAllQuizs() {
 		return quizService.getAllQuizs();
@@ -46,9 +46,16 @@ public class QuizServiceController {
 	public QuestionRes getQuizsByQuizId(@RequestParam("quizId") int quizId) {
 		return quizService.getQuizsByQuizId(quizId);
 	}
-	
+
 	@PostMapping("quiz/search")
 	public SearchRes search(@RequestBody SearchReq req) {
 		return quizService.search(req);
+	}
+
+	// API 的路徑: http://localhost:8080/quiz/get_questions?quizId=1
+	// ?後面的 quizId 必須要和 @RequestParam 括號中的字串一樣
+	@PostMapping("quiz/delete")
+	public BasicRes delete(@RequestParam("quizId") int quizId) throws Exception {
+		return quizService.delete(quizId);
 	}
 }

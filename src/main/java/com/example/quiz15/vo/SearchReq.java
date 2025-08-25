@@ -9,6 +9,8 @@ public class SearchReq {
 	private LocalDate startDate;
 	
 	private LocalDate endDate;
+	
+	private boolean published;
 
 	public SearchReq() {
 		super();
@@ -43,6 +45,14 @@ public class SearchReq {
 
 	public void setEndDate(LocalDate endDate) {
 		this.endDate = endDate;
+	}
+
+	public boolean isPublished() {
+		return published;
+	}
+
+	public void setPublished(boolean published) {
+		this.published = published;
 	}
 	
 	
