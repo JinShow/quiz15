@@ -19,6 +19,7 @@ import com.example.quiz15.vo.QuestionRes;
 import com.example.quiz15.vo.QuestionVo;
 import com.example.quiz15.vo.QuizCreateReq;
 import com.example.quiz15.vo.QuizUpdateReq;
+import com.example.quiz15.vo.SearchReq;
 import com.example.quiz15.vo.SearchRes;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -196,34 +197,61 @@ public class QuizServiceImpl implements QuizService {
 	@Override
 	public SearchRes getAllQuizs() {
 		List<Quiz> list = quizDao.getAll();
-		return new SearchRes(ResCodeMessage.SUCCESS.getCode(), ResCodeMessage.SUCCESS.getMessage(),list);
+		return new SearchRes(ResCodeMessage.SUCCESS.getCode(), ResCodeMessage.SUCCESS.getMessage(), list);
 	}
 
 	@Override
 	public QuestionRes getQuizsByQuizId(int quizId) {
-		if(quizId <= 0) {
+		if (quizId <= 0) {
 			return new QuestionRes(ResCodeMessage.QUIZ_ID_ERROR.getCode(), ResCodeMessage.QUIZ_ID_ERROR.getMessage());
 		}
 		List<QuestionVo> questionVoList = new ArrayList<>();
 		List<Question> list = questionDao.getQuestionsByQuizId(quizId);
-		//把每題選項的資料型態從String 轉換成List<String>
-		for(Question item :list) {
+		// 把每題選項的資料型態從String 轉換成List<String>
+		for (Question item : list) {
 			String str = item.getOptions();
 			try {
 				List<String> optionList = mapper.readValue(str, new TypeReference<>() {
 				});
-				//將從DB取得的每一筆資料(Question item) 的每個欄位值放到 QuestionVo 中，以便返回給每個使用者
-				//Question 和 QuestionVo的差別在於選項的資料型態 (option 和 optionList)
+				// 將從DB取得的每一筆資料(Question item) 的每個欄位值放到 QuestionVo 中，以便返回給每個使用者
+				// Question 和 QuestionVo的差別在於選項的資料型態 (option 和 optionList)
 				QuestionVo vo = new QuestionVo(item.getQuizId(), item.getQuestionId(), item.getQuestion(), //
-						item.getType(),item.isRequired(), optionList);
-				//把每個 vo 放到questionVoList 中
+						item.getType(), item.isRequired(), optionList);
+				// 把每個 vo 放到questionVoList 中
 				questionVoList.add(vo);
 			} catch (Exception e) {
-				//這邊不寫throw e 是因為此方法中沒有使用 @Transactional，不影響返回結果
-				return new QuestionRes(ResCodeMessage.OPTIONS_TRANSFER_ERROR.getCode(), ResCodeMessage.OPTIONS_TRANSFER_ERROR.getMessage());
+				// 這邊不寫throw e 是因為此方法中沒有使用 @Transactional，不影響返回結果
+				return new QuestionRes(ResCodeMessage.OPTIONS_TRANSFER_ERROR.getCode(),
+						ResCodeMessage.OPTIONS_TRANSFER_ERROR.getMessage());
 			}
 		}
-		return new QuestionRes(ResCodeMessage.SUCCESS.getCode(), ResCodeMessage.SUCCESS.getMessage(),questionVoList);
+		return new QuestionRes(ResCodeMessage.SUCCESS.getCode(), ResCodeMessage.SUCCESS.getMessage(), questionVoList);
+	}
+
+	@Override
+	public SearchRes search(SearchReq req) {
+		//轉換 req 的值
+		//若 quizName 是 null，轉成空字串
+		String quizName = req.getQuizName();
+		if(quizName == null) {
+			quizName = "";
+		}else {  //多餘的不需要寫，但為了理解下面的3元運算子而寫
+			quizName = quizName;
+		}
+		//3元運算子:
+		//格式: 變數名稱 = 條件判斷式 ? 判斷式結果為 true 時要賦值: 判斷式結果為 false 時要賦予的值
+		quizName = quizName == null ? "" : quizName;
+		//上面的程式碼可以只用下面一行來取得值
+		String quizName1 = req.getQuizName() == null ? "" : req.getQuizName();
+		//==================================================================================
+		//轉換 開始日期 --> 若沒有給開始日期 --> 給定一個很早的時間
+		LocalDate startDate = req.getStartDate() == null ? LocalDate.of(1970, 1, 1) //
+				: req.getStartDate();
+		
+		LocalDate endDate = req.getEndDate() == null ? LocalDate.of(2999, 12, 31) //
+				:req.getEndDate();
+		List<Quiz> list = quizDao.getAll(quizName, startDate, endDate);
+		return new SearchRes(ResCodeMessage.SUCCESS.getCode(), ResCodeMessage.SUCCESS.getMessage(),list);
 	}
 
 }
